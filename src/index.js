@@ -1,3 +1,4 @@
+```javascript
 const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
@@ -15,10 +16,23 @@ const categoryOfMeasuringsRoutes = require("./routes/categoryOfMeasuring");
 
 const app = express();
 
-const formatsLogger = app.get("env") === "development" ? "dev" : "short";
+const formatsLogger =
+  app.get("env") === "development" ? "dev" : "short";
+
+
+const allowedOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  })
+);
 
 app.use(logger(formatsLogger));
-app.use(cors());
 app.use(express.json());
 app.use(ourLogger());
 
@@ -38,7 +52,15 @@ app.use((_, res) => {
 app.use((err, _, res, __) => {
   const { status = 500, message = "Internal Server Error" } = err;
 
-  res.status(status).json(message);
+  res.status(status).json({ message });
 });
 
-startApp(app);
+Promise.resolve()
+  .then(() => startApp(app))
+  .catch((error) => {
+    console.error("Failed to start application:", error);
+    process.exitCode = 1;
+  });
+
+module.exports = app;
+
