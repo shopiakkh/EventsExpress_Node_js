@@ -1,9 +1,13 @@
-FROM node
+FROM node:22-alpine
 
 WORKDIR /app
 
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
 COPY . .
 
-RUN npm install
+USER node
 
-CMD npm run docker:start
+CMD ["npm", "run", "docker:start"]
